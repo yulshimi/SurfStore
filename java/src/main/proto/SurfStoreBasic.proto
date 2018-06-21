@@ -69,6 +69,13 @@ service MetadataStore {
 
     // YOU CAN INSERT ADDITIONAL RPC CALLS HERE TO IMPLEMENT PART 2
     // OF THE PROJECT, BUT PLEASE DON'T MODIFY THE ABOVE CALLS/ARGUMENTS
+
+    rpc SendUpdate(FileInfo) returns (FileInfo) {}
+    rpc AreYouCrashed(Empty) returns (SimpleAnswer) {}
+    rpc getLogName (Index) returns (FileInfo) {}
+    rpc getVectorSize(Empty) returns (Index) {}
+    rpc PrintLog(Empty) returns (Empty) {}
+    rpc Append(FileInfo) returns (Empty) {}
 }
 
 service BlockStore {
@@ -127,4 +134,17 @@ message SimpleAnswer {
 
 message NodeList {
     repeated int32 nodelist = 1;
+}
+
+message LogBlock {
+    string operation = 1;
+    string filename = 2;
+}
+
+message LogList {
+    repeated LogBlock log_list = 1;
+}
+
+message Index {
+    int32 index = 1;
 }

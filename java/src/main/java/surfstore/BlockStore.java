@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
-
+import java.util.HashMap;
+import com.google.protobuf.ByteString;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -13,6 +14,12 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import surfstore.SurfStoreBasic.Empty;
+import surfstore.SurfStoreBasic.FileInfo;
+import surfstore.SurfStoreBasic.Block;
+import surfstore.SurfStoreBasic.WriteResult;
+import surfstore.SurfStoreBasic.SimpleAnswer;
+import surfstore.SurfStoreBasic.NodeList;
+import surfstore.SurfStoreBasic.Index;
 
 
 public final class BlockStore {
@@ -71,7 +78,8 @@ public final class BlockStore {
         return res;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception 
+    {
         Namespace c_args = parseArgs(args);
         if (c_args == null){
             throw new RuntimeException("Argument parsing failed");
@@ -85,7 +93,16 @@ public final class BlockStore {
         server.blockUntilShutdown();
     }
 
-    static class BlockStoreImpl extends BlockStoreGrpc.BlockStoreImplBase {
+    static class BlockStoreImpl extends BlockStoreGrpc.BlockStoreImplBase 
+    {
+        protected HashMap<String, byte[]> blockMap;
+
+        public BlockStoreImpl()
+        {
+            super();
+            this.blockMap = new HashMap<String, byte[]>();
+        }
+
         @Override
         public void ping(Empty req, final StreamObserver<Empty> responseObserver) {
             Empty response = Empty.newBuilder().build();
@@ -93,6 +110,34 @@ public final class BlockStore {
             responseObserver.onCompleted();
         }
 
-        // TODO: Implement the other RPCs!
+        @Override
+        public void storeBlock(Block req, StreamObserver<Empty> responseObserver) 
+        {
+            Empty response = Empty.newBuilder().build();
+            blockMap.put(req.getHash(), req.getData().toByteArray()); 
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void getBlock(Block req, StreamObserver<Block> responseObserver) 
+        {
+            byte[] data = blockMap.get(req.getHash());
+            Block.Builder builder = Block.newBuilder();
+            builder.setData(ByteString.copyFrom(data));
+            builder.setHash(req.getHash());
+            Block response = builder.build(); 
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+
+        @Override
+        public void hasBlock(Block req, StreamObserver<SimpleAnswer> responseObserver) 
+        {
+            Boolean answer = blockMap.containsKey(req.getHash());
+            SimpleAnswer response = SimpleAnswer.newBuilder().setAnswer(answer).build(); 
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
     }
 }
