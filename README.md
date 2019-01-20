@@ -1,3 +1,9 @@
+The course project of CSE 124(Networked Services; Distributed Systems)
+
+-Implemented the cloud-based file storage(like DropBox) using the Remote Procedure Call in Java
+
+-Implemented fault tolerance using the replicated state machine plus 2-phase commit
+
 Project 2 starter code
 Copyright (C) George Porter, 2017, 2018.
 
